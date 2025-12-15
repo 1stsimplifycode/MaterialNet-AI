@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaterialNet AI - Sustainable Material Recommendations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2ecc71;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+        }
+
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2ecc71;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .material-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: box-shadow 0.3s;
+        }
+
+        .material-card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .material-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .material-name {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .rank-badge {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .rationale {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .rationale h4 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .tradeoffs {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+        }
+
+        .tradeoffs h4 {
+            color: #f39c12;
+            margin-bottom: 10px;
+        }
+
+        .constraints {
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .constraints h4 {
+            color: #c0392b;
+            margin-bottom: 10px;
+        }
+
+        .constraint-item, .tradeoff-item {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .constraint-item:before, .tradeoff-item:before {
+            content: "•";
+            position: absolute;
+            left: 5px;
+            font-weight: bold;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .visual-analysis {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            margin-bottom: 20px;
+        }
+
+        .visual-analysis h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 MaterialNet AI</h1>
+            <p>Context-Aware Eco-Friendly Material Recommendations for Manufacturing</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2 style="margin-bottom: 20px; color: #2c3e50;">Manufacturing Requirements</h2>
+                
+                <div class="form-group">
+                    <label>📸 Upload Product/Material Images (Optional)</label>
+                    <input type="file" id="imageUpload" accept="image/*" multiple style="padding: 10px;">
+                    <div id="imagePreview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 15px;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Current Material Being Replaced</label>
+                    <input type="text" id="currentMaterial" placeholder="e.g., ABS plastic, virgin aluminum, traditional steel">
+                </div>
+
+                <div class="form-group">
+                    <label>Product Description & Use Case</label>
+                    <textarea id="productDesc" placeholder="Describe what you're manufacturing and how it will be used"></textarea>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Industry Sector</label>
+                        <select id="industry">
+                            <option value="">Select industry</option>
+                            <option value="automotive">Automotive</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="packaging">Packaging</option>
+                            <option value="construction">Construction</option>
+                            <option value="consumer-goods">Consumer Goods</option>
+                            <option value="medical">Medical Devices</option>
+                            <option value="aerospace">Aerospace</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Manufacturing Region</label>
+                        <select id="region">
+                            <option value="">Select region</option>
+                            <option value="north-america">North America</option>
+                            <option value="europe">Europe</option>
+                            <option value="asia-pacific">Asia-Pacific</option>
+                            <option value="latin-america">Latin America</option>
+                            <option value="middle-east">Middle East</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Production Volume (units/year)</label>
+                        <input type="text" id="volume" placeholder="e.g., 50000">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Budget Constraint</label>
+                        <select id="budget">
+                            <option value="low">Cost-sensitive (minimize expense)</option>
+                            <option value="medium">Moderate (balanced approach)</option>
+                            <option value="high">Flexible (sustainability priority)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Critical Performance Requirements</label>
+                    <textarea id="requirements" placeholder="e.g., must withstand 200°C, UV resistant, FDA compliant, impact resistance"></textarea>
+                </div>
+
+                <button id="analyzeBtn" onclick="analyzeMaterials()">🔍 Analyze Material Alternatives</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing materials across environmental impact, cost, durability, and manufacturing constraints...</p>
+            </div>
+
+            <div class="results" id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const MISTRAL_API_KEY = 'OEZQn8eRnSGn4IAZbxEF5y22kFbHtvPa';
+        let uploadedImages = [];
+
+        // Handle image uploads
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            const preview = document.getElementById('imagePreview');
+            
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const imageData = event.target.result;
+                    uploadedImages.push(imageData);
+                    
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'image-preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${imageData}" alt="Preview">
+                        <button class="remove-btn" onclick="removeImage(${uploadedImages.length - 1})">×</button>
+                    `;
+                    preview.appendChild(previewItem);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            uploadedImages.forEach((img, idx) => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'image-preview-item';
+                previewItem.innerHTML = `
+                    <img src="${img}" alt="Preview">
+                    <button class="remove-btn" onclick="removeImage(${idx})">×</button>
+                `;
+                preview.appendChild(previewItem);
+            });
+        }
+
+        async function analyzeMaterials() {
+            const currentMaterial = document.getElementById('currentMaterial').value;
+            const productDesc = document.getElementById('productDesc').value;
+            const industry = document.getElementById('industry').value;
+            const region = document.getElementById('region').value;
+            const volume = document.getElementById('volume').value;
+            const budget = document.getElementById('budget').value;
+            const requirements = document.getElementById('requirements').value;
+
+            if (!currentMaterial || !productDesc || !industry || !region) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = true;
+
+            // Build messages array with multimodal content
+            const messages = [];
+            
+            if (uploadedImages.length > 0) {
+                // Create multimodal message with images
+                const content = [
+                    {
+                        type: "text",
+                        text: `You are MaterialNet AI, an explainable AI system for recommending eco-friendly manufacturing materials.
+
+MANUFACTURING CONTEXT:
+- Current Material: ${currentMaterial}
+- Product: ${productDesc}
+- Industry: ${industry}
+- Region: ${region}
+- Production Volume: ${volume} units/year
+- Budget: ${budget}
+- Requirements: ${requirements}
+
+VISUAL CONTEXT: ${uploadedImages.length} image(s) provided showing the current product/material.
+
+First, analyze the images to understand:
+1. Current material properties (texture, finish, color, structural requirements)
+2. Product complexity and manufacturing process hints
+3. Wear patterns or stress points visible
+4. Scale and application context
+
+Then provide 3 practical material alternatives. For EACH material, you MUST provide:
+
+1. Material name and category
+2. VISUAL ANALYSIS: How the images inform this recommendation (2-3 sentences)
+3. EXPLICIT RATIONALE: Why this specific material makes sense for this use case
+4. QUANTIFIED METRICS (estimate realistic values):
+   - Environmental Impact Score (1-10, 10=best)
+   - Cost Factor (relative to current material: -30% to +200%)
+   - Durability Rating (1-10)
+   - Supply Chain Risk (Low/Medium/High)
+   - Recyclability (percentage)
+   - Regulatory Compliance (Yes/No/Partial)
+5. TRADE-OFFS: Specific disadvantages or compromises (e.g., "20% higher cost but 40% lower emissions")
+6. MANUFACTURING CONSTRAINTS: Real-world limitations (tooling changes, processing expertise needed, lead times, minimum order quantities)
+
+Be honest about limitations. Avoid idealized materials. Focus on what's actually available and practical in the specified region and industry.
+
+Format as JSON array with objects containing: name, category, visualAnalysis, rationale, metrics (object with all 6 metrics), tradeoffs (array of strings), constraints (array of strings)`
+                    }
+                ];
+
+                // Add images
+                uploadedImages.forEach(img => {
+                    content.push({
+                        type: "image_url",
+                        image_url: img
+                    });
+                });
+
+                messages.push({
+                    role: "user",
+                    content: content
+                });
+            } else {
+                // Text-only message
+                messages.push({
+                    role: "user",
+                    content: `You are MaterialNet AI, an explainable AI system for recommending eco-friendly manufacturing materials.
+
+MANUFACTURING CONTEXT:
+- Current Material: ${currentMaterial}
+- Product: ${productDesc}
+- Industry: ${industry}
+- Region: ${region}
+- Production Volume: ${volume} units/year
+- Budget: ${budget}
+- Requirements: ${requirements}
+
+Provide 3 practical material alternatives. For EACH material, you MUST provide:
+
+1. Material name and category
+2. EXPLICIT RATIONALE: Why this specific material makes sense for this use case
+3. QUANTIFIED METRICS (estimate realistic values):
+   - Environmental Impact Score (1-10, 10=best)
+   - Cost Factor (relative to current material: -30% to +200%)
+   - Durability Rating (1-10)
+   - Supply Chain Risk (Low/Medium/High)
+   - Recyclability (percentage)
+   - Regulatory Compliance (Yes/No/Partial)
+4. TRADE-OFFS: Specific disadvantages or compromises (e.g., "20% higher cost but 40% lower emissions")
+5. MANUFACTURING CONSTRAINTS: Real-world limitations (tooling changes, processing expertise needed, lead times, minimum order quantities)
+
+Be honest about limitations. Avoid idealized materials. Focus on what's actually available and practical in the specified region and industry.
+
+Format as JSON array with objects containing: name, category, rationale, metrics (object with all 6 metrics), tradeoffs (array of strings), constraints (array of strings)`
+                });
+            }
+
+            const prompt = `You are MaterialNet AI, an explainable AI system for recommending eco-friendly manufacturing materials.
+
+MANUFACTURING CONTEXT:
+- Current Material: ${currentMaterial}
+- Product: ${productDesc}
+- Industry: ${industry}
+- Region: ${region}
+- Production Volume: ${volume} units/year
+- Budget: ${budget}
+- Requirements: ${requirements}
+
+Provide 3 practical material alternatives. For EACH material, you MUST provide:
+
+1. Material name and category
+2. EXPLICIT RATIONALE: Why this specific material makes sense for this use case
+3. QUANTIFIED METRICS (estimate realistic values):
+   - Environmental Impact Score (1-10, 10=best)
+   - Cost Factor (relative to current material: -30% to +200%)
+   - Durability Rating (1-10)
+   - Supply Chain Risk (Low/Medium/High)
+   - Recyclability (percentage)
+   - Regulatory Compliance (Yes/No/Partial)
+4. TRADE-OFFS: Specific disadvantages or compromises (e.g., "20% higher cost but 40% lower emissions")
+5. MANUFACTURING CONSTRAINTS: Real-world limitations (tooling changes, processing expertise needed, lead times, minimum order quantities)
+
+Be honest about limitations. Avoid idealized materials. Focus on what's actually available and practical in the specified region and industry.
+
+Format as JSON array with objects containing: name, category, rationale, metrics (object with all 6 metrics), tradeoffs (array of strings), constraints (array of strings)`;
+
+            try {
+                const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${MISTRAL_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'pixtral-large-latest',
+                        messages: messages,
+                        temperature: 0.7,
+                        max_tokens: 4000
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error.message || 'API Error');
+                }
+
+                const content = data.choices[0].message.content;
+                
+                let materials;
+                try {
+                    const jsonMatch = content.match(/\[[\s\S]*\]/);
+                    if (jsonMatch) {
+                        materials = JSON.parse(jsonMatch[0]);
+                    } else {
+                        materials = JSON.parse(content);
+                    }
+                } catch (e) {
+                    throw new Error('Unable to parse AI response. Please try again.');
+                }
+
+                displayResults(materials);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                console.error(error);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        }
+
+        function displayResults(materials) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2 style="margin-bottom: 25px; color: #2c3e50;">📊 Material Recommendations</h2>';
+
+            materials.forEach((material, index) => {
+                const card = document.createElement('div');
+                card.className = 'material-card';
+                
+                card.innerHTML = `
+                    <div class="material-header">
+                        <div class="material-name">${material.name}</div>
+                        <div class="rank-badge">Option ${index + 1}</div>
+                    </div>
+
+                    ${material.visualAnalysis ? `
+                    <div class="visual-analysis">
+                        <h4>👁️ Visual Analysis</h4>
+                        <p>${material.visualAnalysis}</p>
+                    </div>` : ''}
+
+                    <div class="rationale">
+                        <h4>💡 Why This Material?</h4>
+                        <p>${material.rationale}</p>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <div class="metric-label">Environmental Impact</div>
+                            <div class="metric-value">${material.metrics.environmentalImpact}/10</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Cost Factor</div>
+                            <div class="metric-value">${material.metrics.costFactor}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Durability</div>
+                            <div class="metric-value">${material.metrics.durability}/10</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Supply Chain Risk</div>
+                            <div class="metric-value">${material.metrics.supplyChainRisk}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Recyclability</div>
+                            <div class="metric-value">${material.metrics.recyclability}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Regulatory Compliance</div>
+                            <div class="metric-value">${material.metrics.regulatoryCompliance}</div>
+                        </div>
+                    </div>
+
+                    <div class="tradeoffs">
+                        <h4>⚖️ Trade-offs & Compromises</h4>
+                        ${material.tradeoffs.map(t => `<div class="tradeoff-item">${t}</div>`).join('')}
+                    </div>
+
+                    <div class="constraints">
+                        <h4>🔧 Manufacturing Constraints</h4>
+                        ${material.constraints.map(c => `<div class="constraint-item">${c}</div>`).join('')}
+                    </div>
+                `;
+
+                resultsDiv.appendChild(card);
+            });
+
+            resultsDiv.style.display = 'block';
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
